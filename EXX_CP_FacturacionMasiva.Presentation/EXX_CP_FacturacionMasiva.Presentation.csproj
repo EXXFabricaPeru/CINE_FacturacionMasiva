@@ -1,0 +1,115 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{CAF9E069-E16A-4A12-A454-548B93926653}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>EXX_CP_FacturacionMasiva.Presentation</RootNamespace>
+    <AssemblyName>EXX_CP_FacturacionMasiva.Presentation</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\x64\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>EXX_CP_FacturacionMasiva.Presentation.Program</StartupObject>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="EXX_Metadata.BL, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Debug\EXX_Metadata.BL.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="SAPBusinessOneSDK" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Forms\USRForms\FormFacturacionMasivaCompras.b1f.cs">
+      <DependentUpon>FormFacturacionMasivaCompras.b1f</DependentUpon>
+    </Compile>
+    <Compile Include="Program.cs" />
+    <Compile Include="Menu.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\EXX_CP_FacturacionMaisva.Business.Logic\EXX_CP_FacturacionMaisva.Business.Logic.csproj">
+      <Project>{0EA8CE88-8C0E-4187-9731-51A158A8F199}</Project>
+      <Name>EXX_CP_FacturacionMaisva.Business.Logic</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\EXX_CP_FacturacionMasiva.Common.Utiles\EXX_CP_FacturacionMasiva.Common.Utiles.csproj">
+      <Project>{005537EC-F5A2-456B-9CBB-7B52B9CEC522}</Project>
+      <Name>EXX_CP_FacturacionMasiva.Common.Utiles</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\EXX_CP_FacturacionMasiva.Domain.Entities\EXX_CP_FacturacionMasiva.Domain.Entities.csproj">
+      <Project>{5CA643DE-CE26-40F3-93FA-B3B714A0DBC5}</Project>
+      <Name>EXX_CP_FacturacionMasiva.Domain.Entities</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\EXX_CP_FacturacionMasiva.Infrastructure.Data\EXX_CP_FacturacionMasiva.Infrastructure.Data.csproj">
+      <Project>{350EBECD-0D61-4223-9958-2907856A6E63}</Project>
+      <Name>EXX_CP_FacturacionMasiva.Infrastructure.Data</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="Forms\USRForms\FormFacturacionMasivaCompras.b1f">
+      <FormCategory>UserForm</FormCategory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Resources\Scripts\SQL\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\BO\UF.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Gif\gif.gif">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Gif\gif.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Gif\Wait.srf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scripts\HANA\EXX_SP_FM_LISTAR_DOCUMENTOS_FACTURACION_COMPRAS.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<BOM>
+	<BO>
+		<AdmInfo>
+			<Object>152</Object>
+		</AdmInfo>
+		<CUFD>
+			<row>
+				<TableID>PDN1</TableID>
+				<AliasID>EXD_FACTURADO</AliasID>
+				<Descr>Facturado</Descr>
+				<TypeID>A</TypeID>
+				<SizeID>1</SizeID>
+				<EditSize>1</EditSize>
+				<Dflt>N</Dflt>
+			</row>
+		</CUFD>
+		<UFD1>
+			<row>
+				<FldValue>Y</FldValue>
+				<Descr>SI</Descr>
+			</row>
+			<row>
+				<FldValue>N</FldValue>
+				<Descr>NO</Descr>
+			</row>
+		</UFD1>
+	</BO>
+</BOM>

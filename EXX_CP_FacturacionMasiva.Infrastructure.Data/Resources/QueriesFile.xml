@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<DBData>
+	<Queries>
+		<Query Id="ObtenerAlmacenes">
+			<Scripts>
+				<Script DBType="MIX">
+					<Value>select "WhsCode","WhsName" from OWHS</Value>
+				</Script>
+			</Scripts>
+		</Query>
+		<Query Id="ObtenerPeliculas">
+			<Scripts>
+				<Script DBType="MIX">
+					<Value>select top 100 "Code","Name" from "@EXC_TPELI"</Value>
+				</Script>
+			</Scripts>
+		</Query>
+		<Query Id="ObtenerDocsFacturacionComp">
+			<Scripts>
+				<Script DBType="HANA">
+					<Value>CALL EXX_SP_FM_LISTAR_DOCUMENTOS_FACTURACION_COMPRAS()</Value>
+				</Script>
+				<Script DBType="SQL">
+					<Value>EXEC EXX_SP_FM_LISTAR_DOCUMENTOS_FACTURACION_COMPRAS</Value>
+				</Script>
+			</Scripts>
+		</Query>
+	</Queries>
+</DBData>
+

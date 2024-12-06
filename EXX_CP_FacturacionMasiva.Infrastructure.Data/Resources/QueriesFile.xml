@@ -25,6 +25,32 @@
 				</Script>
 			</Scripts>
 		</Query>
+		<Query Id="ObtenerDocBase">
+			<Scripts>
+				<Script DBType="HANA">
+					<Value>
+						Select '01' as "Code" ,'Orden Venta' as "DocBase"  from dummy
+						UNION ALL
+						Select '02' as "Code", 'Factura' as "DocBase"   from dummy
+						UNION ALL
+						Select '03' as "Code", 'Boleta' as "DocBase"  from dummy
+					</Value>
+				</Script>
+			</Scripts>
+		</Query>
+		<Query Id="ObtenerTipoDocumento">
+			<Scripts>
+				<Script DBType="HANA">
+					<Value>
+						Select 'AN' as "Code" ,'Anulado' as "Tipo"  from dummy
+						UNION ALL
+						Select '01' as "Code", 'Factura' as "Tipo"   from dummy
+						UNION ALL
+						Select '03' as "Code", 'Boleta' as "Tipo"  from dummy
+					</Value>
+				</Script>
+			</Scripts>
+		</Query>
 	</Queries>
 </DBData>
 

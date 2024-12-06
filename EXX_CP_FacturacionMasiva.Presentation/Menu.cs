@@ -104,6 +104,9 @@ namespace EXX_CP_FacturacionMasiva.Presentation
                         case "EXX_MNU_FM_COMP2":
                             new FormFacturacionMasivaCompras("S").Show();
                             break;
+                        case "EXX_MNU_FM_VENT":
+                            new FormFacturacionMasivaVentas().Show();
+                            break;
                         default:
                             break;
                     }

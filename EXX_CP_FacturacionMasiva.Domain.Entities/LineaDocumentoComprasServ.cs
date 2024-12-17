@@ -14,14 +14,15 @@ namespace EXX_CP_FacturacionMasiva.Domain.Entities
         public int LineNum { get; set; }
         public string CardCode { get; set; }
         public string CardName { get; set; }
-        public string CodPelicula { get; set; }
         public string CodComplejo { get; set; }
-        public string Sala { get; set; }
-        public DateTime FechaFuncion { get; set; }
         public string NroFactura { get; set; }
-        public double Ajuste { get; set; }
+        public string TipoDocumento { get; set; }
+        public DateTime FechaDocumento { get; set; }
+        public DateTime FechaContable { get; set; }
         public string Glosa { get; set; }
-        public string Area { get; set; }
+        public string Indicator { get; set; }
+        public string GrupoDetraccion { get; set; }
+        public string CuentaAsociada { get; set; }
         public double UnitPrice { get; set; }
         public string ItemCode { get; set; }
     }

@@ -6,17 +6,16 @@ using System.Threading.Tasks;
 
 namespace EXX_CP_FacturacionMasiva.Domain.Entities
 {
-    public class DocumentoSBO
+    public class DocumentoSBOVenta
     {
         private SAPbobsCOM.Documents _doc = null;
 
-        public DocumentoSBO(SAPbobsCOM.Company company, SAPbobsCOM.BoObjectTypes objType)
+        public DocumentoSBOVenta(SAPbobsCOM.Company company, SAPbobsCOM.BoObjectTypes objType)
         {
             _doc = (SAPbobsCOM.Documents)company.GetBusinessObject(objType);
-            _doc.UserFields.Fields.Item("U_EXC_COSTO").Value = "DO";
-            _doc.UserFields.Fields.Item("U_EXC_TIPCOM").Value = "E";
-            _doc.UserFields.Fields.Item("U_EXX_TIPOOPER").Value = "02";
-            _doc.SalesPersonCode = 21;
+            //_doc.UserFields.Fields.Item("U_EXC_COSTO").Value = "DO";
+            //_doc.UserFields.Fields.Item("U_EXC_TIPCOM").Value = "E";
+            //_doc.SalesPersonCode = 21;
         }
         public string CardCode { set => _doc.CardCode = value; }
         public string CardName { set => _doc.CardName = value; }
@@ -26,12 +25,9 @@ namespace EXX_CP_FacturacionMasiva.Domain.Entities
         public string FolioPrefixString { set => _doc.FolioPrefixString = value; }
         public int FolioNumber { set => _doc.FolioNumber = value; }
         public string Comments { set => _doc.Comments = value; }
-        public string JournalMemo { set => _doc.JournalMemo = value; }
-        public string NumAtCard { set => _doc.NumAtCard = value; }
-        public string Indicator { set => _doc.Indicator = value; }
-
+        public string U_EXC_TVENTA { set => _doc.UserFields.Fields.Item("U_EXC_TVENTA").Value = value; }
         public IEnumerable<string> IDs { get; set; }
-        public IEnumerable<DocumentoSBOLine> Lines
+        public IEnumerable<DocumentoSBOLineVentas> Lines
         {
             set
             {
@@ -40,15 +36,16 @@ namespace EXX_CP_FacturacionMasiva.Domain.Entities
                 {
                     _doc.Lines.Add();
                     _doc.Lines.SetCurrentLine(currentLine);
-                    _doc.Lines.BaseType = item.BaseType;
-                    _doc.Lines.BaseEntry = item.BaseEntry;
-                    _doc.Lines.BaseLine = item.BaseLine;
-                    //_doc.Lines.ItemCode = item.ItemCode;
-                    _doc.Lines.WarehouseCode = item.WhsCode;
-                    //_doc.Lines.UnitPrice = item.UnitPrice;
-                    _doc.Lines.CostingCode = "56";
+                    _doc.Lines.ItemCode = item.ItemCode;
+                    //_doc.Lines.WarehouseCode = item.WhsCode;
+                    _doc.Lines.UnitPrice = item.UnitPrice;
+                    _doc.Lines.Quantity = item.Quantity;
+                    _doc.Lines.CostingCode = "40";// item.Complejo;
                     _doc.Lines.CostingCode2 = item.CodArea;
-                    if (!string.IsNullOrWhiteSpace(item.U_EXX_GRUPODET)) _doc.Lines.UserFields.Fields.Item("U_EXX_GRUPODET").Value = item.U_EXX_GRUPODET;
+                    _doc.Lines.CostingCode3 = item.LineaProducto;
+                    _doc.Lines.UserFields.Fields.Item("U_EXX_FFNC").Value = item.FechaFinContrato;
+                    _doc.Lines.UserFields.Fields.Item("U_EXX_FINC").Value = item.FechaInicioContrato;
+
                     currentLine++;
                 }
             }
@@ -57,15 +54,18 @@ namespace EXX_CP_FacturacionMasiva.Domain.Entities
         public int Add() { return _doc.Add(); }
     }
 
-    public class DocumentoSBOLine
+    public class DocumentoSBOLineVentas
     {
-        public int BaseType { get; set; }
-        public int BaseEntry { get; set; }
-        public int BaseLine { get; set; }
         public string ItemCode { get; set; }
         public string WhsCode { get; set; }
         public double UnitPrice { get; set; }
         public string CodArea { get; set; }
-        public string U_EXX_GRUPODET { get; set; }
+        public double Quantity { get; set; }
+        public double LineNum { get; set; }
+        public double DocEntry { get; set; }
+        public string Complejo { get; set; }
+        public string LineaProducto { get; set; }
+        public DateTime FechaInicioContrato { get; set; }
+        public DateTime FechaFinContrato { get; set; }
     }
 }

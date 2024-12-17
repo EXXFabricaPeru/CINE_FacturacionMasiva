@@ -24,6 +24,18 @@ namespace EXX_CP_FacturacionMaisva.Business.Logic
             return QueriesManager.executeQueryAsRecordSet(_queryId);
         }
 
+        public static Recordset ObtenerTipoDocumentoSUNAT()
+        {
+            _queryId = "ObtenerTipoDocumentoSUNAT";
+            return QueriesManager.executeQueryAsRecordSet(_queryId);
+        }
+
+        public static Recordset ObtenerGruposDetraccion()
+        {
+            _queryId = "ObtenerGruposDetraccion";
+            return QueriesManager.executeQueryAsRecordSet(_queryId);
+        }
+
         public void GenerarDocumentosEnSBO(IEnumerable<LineaDocumentoCompras> lstDocumentos)
         { 
 

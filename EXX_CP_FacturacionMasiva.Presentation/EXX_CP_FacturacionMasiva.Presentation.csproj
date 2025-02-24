@@ -117,6 +117,9 @@
     <Content Include="Resources\BO\UF.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Resources\DLL\EXX_Metadata.BL.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Resources\Gif\gif.gif">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

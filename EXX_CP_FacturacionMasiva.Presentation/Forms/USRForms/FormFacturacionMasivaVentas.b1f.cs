@@ -117,10 +117,10 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
             {
                 var fchIni = (DateTime.TryParse(edtFechaIni.Value, out var rslt1) ? rslt1 : DateTime.MinValue).ToString("yyyyMMdd");
                 var fchFin = (DateTime.TryParse(edtFechaFin.Value, out var rslt2) ? rslt2 : DateTime.MaxValue).ToString("yyyyMMdd");
-                var cliente = string.IsNullOrEmpty(edtCliente.Value)? "" : edtCliente.Value;
+                var cliente = string.IsNullOrEmpty(edtCliente.Value) ? "" : edtCliente.Value;
                 var vendedor = string.IsNullOrEmpty(edtVendedor.Value) ? "" : edtVendedor.Value;
-                var docBase = cboDocBase.Selected==null ? "" : cboDocBase.Selected?.Value;
-                var tipoDoc = cboTipoDoc.Selected == null  ? "" : cboTipoDoc.Selected?.Value;
+                var docBase = cboDocBase.Selected == null ? "" : cboDocBase.Selected?.Value;
+                var tipoDoc = cboTipoDoc.Selected == null ? "" : cboTipoDoc.Selected?.Value;
 
                 var sqlQry = $"CALL EXX_SP_FM_LISTAR_DOCUMENTOS_FACTURACION_VENTAS('{fchIni}','{fchFin}','{cliente}'," +
             $"'{vendedor}','{docBase}','{tipoDoc}')";
@@ -129,7 +129,7 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                 dttDocumentos.ExecuteQuery(sqlQry);
                 mtxDocumentos.LoadFromDataSource();
             }
-            catch (Exception ex )
+            catch (Exception ex)
             {
 
                 Application.SBO_Application.StatusBar.SetText(ex.Message, SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
@@ -163,7 +163,7 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                 var _dsrXmlDTDocs = (XMLDataTable)_xmlSerializer.Deserialize(new StringReader(strXMLDTDocs));
 
                 List<DocumentoVenta> ltd = new List<DocumentoVenta>();
-             
+
                 var lstDocs = _dsrXmlDTDocs.Rows.Where(r => r.Cells.FirstOrDefault(c => c.ColumnUid == "Slc").Value == "Y").Select(s => new DocumentoVenta
                 {
                     Slc = s.Cells.FirstOrDefault(c => c.ColumnUid == "Slc").Value,
@@ -179,7 +179,7 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                     TotalDoc = Convert.ToDouble(s.Cells.FirstOrDefault(c => c.ColumnUid == "TotalDoc").Value),
                     Comentarios = s.Cells.FirstOrDefault(c => c.ColumnUid == "Comentarios").Value,
                     FactReserva = s.Cells.FirstOrDefault(c => c.ColumnUid == "FactReserva").Value,
-                    Moneda =s.Cells.FirstOrDefault(c => c.ColumnUid == "Moneda").Value,
+                    Moneda = s.Cells.FirstOrDefault(c => c.ColumnUid == "Moneda").Value,
                     NroDoc = s.Cells.FirstOrDefault(c => c.ColumnUid == "NroDoc").Value,
                     NroOV = s.Cells.FirstOrDefault(c => c.ColumnUid == "NroOV").Value,
                     TipoDoc = s.Cells.FirstOrDefault(c => c.ColumnUid == "TipoDoc").Value,
@@ -218,17 +218,17 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                         {
                             return s.DocEntry + "-" + s.LineNum;
                         })
-                    }
+                    });//.Where(t=>t.);
 
                 try
                 {
                     var recSet = (SAPbobsCOM.Recordset)SBOCompany.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
                     var sql = string.Empty;
                     var cntErr = 0;
-                    foreach (var doc in docsSAP) 
+                    foreach (var doc in docsSAP)
                     {
                         var rslt = doc.Add();
-                        if (rslt != 0) 
+                        if (rslt != 0)
                         {
                             Application.SBO_Application.StatusBar.SetText(SBOCompany.GetLastErrorDescription(), SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
                             cntErr++;
@@ -241,7 +241,7 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                                 recSet.DoQuery(sql);
                             }
                         }
-                    } 
+                    }
                     btnBuscar.Item.Click(SAPbouiCOM.BoCellClickType.ct_Regular);
                     if (cntErr == 0)
                         Application.SBO_Application.StatusBar.SetText("Proceso finalizado correctamente", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
@@ -289,7 +289,7 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                 FechaInicioContrato = DateTime.ParseExact(s.Cells.FirstOrDefault(c => c.ColumnUid == "U_EXX_FINC").Value, "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture)
             }); ;
 
-            
+
             return lstDocs;
         }
 

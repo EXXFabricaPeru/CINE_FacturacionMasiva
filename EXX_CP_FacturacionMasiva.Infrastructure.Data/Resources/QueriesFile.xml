@@ -11,7 +11,7 @@
 		<Query Id="ObtenerPeliculas">
 			<Scripts>
 				<Script DBType="MIX">
-					<Value>select top 100 "Code","Name" from "@EXC_TPELI"</Value>
+					<Value>select "Code","Name" from "@EXC_TPELI" order by 2</Value>
 				</Script>
 			</Scripts>
 		</Query>

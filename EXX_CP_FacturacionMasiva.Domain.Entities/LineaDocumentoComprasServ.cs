@@ -25,5 +25,6 @@ namespace EXX_CP_FacturacionMasiva.Domain.Entities
         public string CuentaAsociada { get; set; }
         public double UnitPrice { get; set; }
         public string ItemCode { get; set; }
+        public double ImporteBase { get; set; }
     }
 }

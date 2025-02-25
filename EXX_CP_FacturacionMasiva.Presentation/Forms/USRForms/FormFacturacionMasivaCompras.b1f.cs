@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
+using System.Xml.Linq;
 using System.Xml.Serialization;
 using static EXX_CP_FacturacionMasiva.Common.Utiles.Global;
 
@@ -63,6 +65,30 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
             _tipoFacturacion = tipoFacturacion;
             this.UIAPIRawForm.Title = $"Facturación Masiva - {(_tipoFacturacion == "S" ? "Dulcería y Servicios" : "Distribución")}";
             this.MostrarControlesPorTipo(tipoFacturacion);
+
+            if (_tipoFacturacion == "D")
+            {
+                //Cargar combo de peliculas
+
+                while (cmbPeliculas.ValidValues.Count > 0) cmbPeliculas.ValidValues.Remove(0, SAPbouiCOM.BoSearchKey.psk_Index);
+                var peliculas = FacturacionMasivaProveedoresBL.ObtenerPeliculas();
+                var lstPeliculas = XDocument.Parse(peliculas.GetAsXML()).Descendants("row").Select(d => new
+                {
+                    Code = d.Element("Code").Value,
+                    Name = d.Element("Name").Value
+                }).ToList();
+                Application.SBO_Application.StatusBar.SetText("Cargando lista de peliculas, espere por favor....", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Warning);
+                btnBuscar.Item.Enabled = false;
+                Task.Factory.StartNew(() =>
+                {
+                    lstPeliculas.All(p =>
+                    {
+                        cmbPeliculas.ValidValues.Add(p.Code, p.Name);
+                        return true;
+                    });
+                    btnBuscar.Item.Enabled = true;
+                });
+            }
         }
 
         /// <summary>
@@ -116,7 +142,6 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
             this.mtxDocsServ = ((SAPbouiCOM.Matrix)(this.GetItem("Item_25").Specific));
             this.mtxDocsServ.ChooseFromListAfter += new SAPbouiCOM._IMatrixEvents_ChooseFromListAfterEventHandler(this.mtxDocsServ_ChooseFromListAfter);
             this.OnCustomInitialize();
-
         }
 
         /// <summary>
@@ -147,15 +172,6 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                 almacenes.MoveNext();
             }
 
-            //Cargar combo de peliculas
-            while (cmbPeliculas.ValidValues.Count > 0) cmbPeliculas.ValidValues.Remove(0, SAPbouiCOM.BoSearchKey.psk_Index);
-            var peliculas = FacturacionMasivaProveedoresBL.ObtenerPeliculas();
-            while (!peliculas.EoF)
-            {
-                cmbPeliculas.ValidValues.Add(peliculas.Fields.Item(0).Value.ToString(), peliculas.Fields.Item(1).Value.ToString());
-                peliculas.MoveNext();
-            }
-
             var tipoDocumentoSUNAT = FacturacionMasivaProveedoresBL.ObtenerTipoDocumentoSUNAT();
             while (!tipoDocumentoSUNAT.EoF)
             {
@@ -170,13 +186,18 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                 gruposDetraccion.MoveNext();
             }
 
-            var cnds = (SAPbouiCOM.Conditions)Application.SBO_Application.CreateObject(SAPbouiCOM.BoCreatableObjectType.cot_Conditions);
-            var cnd = cnds.Add();
-            cnd.Alias = "DimCode";
-            cnd.Operation = SAPbouiCOM.BoConditionOperation.co_EQUAL;
-            cnd.CondVal = "2";
-            this.UIAPIRawForm.ChooseFromLists.Item("CFL_DIM2").SetConditions(cnds);
+            SAPbouiCOM.Conditions cnds = null;
+            SAPbouiCOM.Condition cnd = null;
 
+            for (int i = 1; i <= 4; i++)
+            {
+                cnds = (SAPbouiCOM.Conditions)Application.SBO_Application.CreateObject(SAPbouiCOM.BoCreatableObjectType.cot_Conditions);
+                cnd = cnds.Add();
+                cnd.Alias = "DimCode";
+                cnd.Operation = SAPbouiCOM.BoConditionOperation.co_EQUAL;
+                cnd.CondVal = i.ToString();
+                this.UIAPIRawForm.ChooseFromLists.Item($"CFL_DIM{i}").SetConditions(cnds);
+            }
 
             cnds = (SAPbouiCOM.Conditions)Application.SBO_Application.CreateObject(SAPbouiCOM.BoCreatableObjectType.cot_Conditions);
             cnd = cnds.Add();
@@ -184,6 +205,14 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
             cnd.Operation = SAPbouiCOM.BoConditionOperation.co_EQUAL;
             cnd.CondVal = "Y";
             this.UIAPIRawForm.ChooseFromLists.Item("CFL_OACT").SetConditions(cnds);
+
+            cnd = null;
+            cnds = (SAPbouiCOM.Conditions)Application.SBO_Application.CreateObject(SAPbouiCOM.BoCreatableObjectType.cot_Conditions);
+            cnd = cnds.Add();
+            cnd.Alias = "CardType";
+            cnd.Operation = SAPbouiCOM.BoConditionOperation.co_EQUAL;
+            cnd.CondVal = "S";
+            this.UIAPIRawForm.ChooseFromLists.Item("CFL_PRV").SetConditions(cnds);
         }
 
         private void btnBuscar_PressedAfter(object sboObject, SAPbouiCOM.SBOItemEventArg pVal)
@@ -195,7 +224,7 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
             var fchIniCont = (DateTime.TryParse(udsFechaFinCont.Value, out var rslt3) ? rslt3 : DateTime.MinValue).ToString("yyyyMMdd");
             var fchFinCont = (DateTime.TryParse(udsFechaFinCont.Value, out var rslt4) ? rslt4 : DateTime.MaxValue).ToString("yyyyMMdd");
             var codComplejo = string.IsNullOrWhiteSpace(this.udsCodComplejo.Value) ? "null" : $"'{this.udsCodComplejo.Value}'";
-            var codSala = string.IsNullOrWhiteSpace(this.udsCodSala.Value) ? "null" : $"'{this.udsCodSala.Value}'";
+            var codSala = string.IsNullOrWhiteSpace(this.udsCodSala.Value) ? "-1" : $"{this.udsCodSala.Value}";
             var codPelicula = string.IsNullOrWhiteSpace(this.udsCodPelicula.Value) ? "null" : $"'{this.udsCodPelicula.Value}'";
             //Agrupa por Pelicula
             var agrupaPorPelicula = udsSlcPelicula.ValueEx;
@@ -310,6 +339,7 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                     Sala = s.Cells.FirstOrDefault(c => c.ColumnUid == "Sala").Value,
                     NroFactura = s.Cells.FirstOrDefault(c => c.ColumnUid == "NroFactura").Value,
                     Ajuste = Convert.ToDouble(s.Cells.FirstOrDefault(c => c.ColumnUid == "Ajuste").Value),
+                    Complejo = s.Cells.FirstOrDefault(c => c.ColumnUid == "Complejo").Value,
                     Area = s.Cells.FirstOrDefault(c => c.ColumnUid == "Area").Value,
                     Glosa = s.Cells.FirstOrDefault(c => c.ColumnUid == "Glosa").Value,
                     UnitPrice = Convert.ToDouble(s.Cells.FirstOrDefault(c => c.ColumnUid == "PrecioUnitario").Value),
@@ -379,7 +409,6 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                         UnitPrice = g.FirstOrDefault().UnitPrice
                     });
                 }
-
                 if (agrupaPorPelicula)
                 {
                     lstDocsAux = lstDocs.GroupBy(d => new
@@ -408,8 +437,8 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                 {
                     CardCode = d.CardCode,
                     CardName = d.CardName,
-                    NroFactura = d.NroFactura,
-                    Glosa = d.Glosa
+                    //NroFactura = d.NroFactura,
+                    //Glosa = d.Glosa
                 }).Select(g =>
                     new DocumentoSBO(SBOCompany, SAPbobsCOM.BoObjectTypes.oPurchaseInvoices)
                     {
@@ -417,11 +446,11 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                         CardName = g.Key.CardName,
                         TaxDate = DateTime.ParseExact(udsFechaFacturacion.ValueEx, "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture),
                         DocDate = DateTime.ParseExact(udsFechaFacturacion.ValueEx, "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture),
-                        Comments = g.Key.Glosa,
-                        JournalMemo = g.Key.Glosa,
-                        FolioPrefixString = g.Key.NroFactura?.Split('-')[0] ?? "",
-                        FolioNumber = Convert.ToInt32(g.Key.NroFactura?.Split('-').Length > 1 ? g.Key.NroFactura?.Split('-')[1] : "0"),
-                        NumAtCard = g.Key.NroFactura,
+                        Comments = g.FirstOrDefault().Glosa,
+                        JournalMemo = g.FirstOrDefault().Glosa,
+                        FolioPrefixString = g.FirstOrDefault().NroFactura?.Split('-')[0] ?? "",
+                        FolioNumber = Convert.ToInt32(g.FirstOrDefault().NroFactura?.Split('-').Length > 1 ? g.FirstOrDefault().NroFactura?.Split('-')[1] : "0"),
+                        NumAtCard = g.FirstOrDefault().NroFactura,
                         Lines = g.Select(s => new DocumentoSBOLine
                         {
                             BaseType = s.ObjType,
@@ -430,14 +459,16 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                             ItemCode = s.ItemCode,
                             WhsCode = s.CodComplejo,
                             UnitPrice = s.UnitPrice,
-                            CodArea = s.Area
+                            CodComplejo = string.IsNullOrWhiteSpace(s.Complejo) ? g.FirstOrDefault(f => !string.IsNullOrWhiteSpace(f.Complejo)).Complejo : s.Complejo,
+                            CodArea = string.IsNullOrWhiteSpace(s.Area) ? g.FirstOrDefault(f => !string.IsNullOrWhiteSpace(f.Area)).Area : s.Area,
+                            Ajuste = g.Sum(s2 => s2.Ajuste)
                         }),
                         IDs = g.Select(s =>
                         {
                             return s.DocEntry + "-" + s.LineNum;
                         })
                     }
-               );
+               ); ;
             }
             else
             {
@@ -461,9 +492,10 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                     GrupoDetraccion = s.Cells.FirstOrDefault(c => c.ColumnUid == "GrupoDETFactura").Value,
                     Glosa = s.Cells.FirstOrDefault(c => c.ColumnUid == "GlosaFactura").Value,
                     CodComplejo = s.Cells.FirstOrDefault(c => c.ColumnUid == "CodComplejo").Value,
-                    UnitPrice = 0.00/*Convert.ToDouble(s.Cells.FirstOrDefault(c => c.ColumnUid == "PrecioUnitario").Value),*/,
+                    //UnitPrice = Convert.ToDouble(s.Cells.FirstOrDefault(c => c.ColumnUid == "PrecioUnitario").Value),*/,
                     Indicator = s.Cells.FirstOrDefault(c => c.ColumnUid == "TipoDocFactura").Value,
                     //ItemCode = s.Cells.FirstOrDefault(c => c.ColumnUid == "CodArticulo").Value
+                    ImporteBase = Convert.ToDouble(s.Cells.FirstOrDefault(c => c.ColumnUid == "ImporteBase").Value)
                 });
 
                 if (lstDocs.Count() == 0)
@@ -484,8 +516,10 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                     {
                         CardCode = g.Key.CardCode,
                         CardName = g.Key.CardName,
+                        DocCurrency = "SOL",
                         TaxDate = DateTime.ParseExact(udsFechaFacturacion.ValueEx, "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture),
                         DocDate = DateTime.ParseExact(udsFechaFacturacion.ValueEx, "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture),
+                        DocDueDate = DateTime.ParseExact(udsFechaFacturacion.ValueEx, "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture),
                         Comments = g.Key.Glosa,
                         JournalMemo = g.Key.Glosa,
                         FolioPrefixString = g.Key.NroFactura?.Split('-')[0] ?? "",
@@ -502,6 +536,7 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                             UnitPrice = s.UnitPrice,
                             U_EXX_GRUPODET = s.GrupoDetraccion
                         }),
+                        TotalDocumento = g.Sum(s => s.ImporteBase),
                         IDs = g.Select(s =>
                         {
                             return s.DocEntry + "-" + s.LineNum;
@@ -516,6 +551,8 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                 var cntErr = 0;
                 foreach (var doc in docsSAP)
                 {
+                    //doc.QuitarRetencion();
+                    if (!string.IsNullOrWhiteSpace(doc.CodDetraccion)) doc.AplicarDetraccion(doc.CodDetraccion);
                     var rslt = doc.Add();
                     if (rslt != 0)
                     {
@@ -547,7 +584,23 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
             if (cfle.SelectedObjects is SAPbouiCOM.DataTable dtbl)
             {
                 mtxDocs.FlushToDataSource();
-                dttDocumentos.SetValue("Area", pVal.Row - 1, dtbl.GetValue(0, 0).ToString());
+                switch (pVal.ColUID)
+                {
+                    case "Col_11":
+                        dttDocumentos.SetValue("Area", pVal.Row - 1, dtbl.GetValue(0, 0).ToString());
+                        break;
+                    case "Col_21":
+                        dttDocumentos.SetValue("Complejo", pVal.Row - 1, dtbl.GetValue(0, 0).ToString());
+                        break;
+                    case "Col_22":
+                        dttDocumentos.SetValue("LineaProducto", pVal.Row - 1, dtbl.GetValue(0, 0).ToString());
+                        break;
+                    case "Col_23":
+                        dttDocumentos.SetValue("TipoGasto", pVal.Row - 1, dtbl.GetValue(0, 0).ToString());
+                        break;
+                    default:
+                        break;
+                }
                 mtxDocs.LoadFromDataSourceEx();
             }
         }

@@ -21,7 +21,10 @@ namespace EXX_CP_FacturacionMasiva.Domain.Entities
         public string NroFactura { get; set; }
         public double Ajuste { get; set; }
         public string Glosa { get; set; }
+        public string Complejo { get; set; }
         public string Area { get; set; }
+        public string LineaProducto { get; set; }
+        public string TipoGasto { get; set; }
         public double UnitPrice { get; set; }
         public string ItemCode { get; set; }
     }

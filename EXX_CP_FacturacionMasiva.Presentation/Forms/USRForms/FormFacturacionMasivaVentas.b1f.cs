@@ -201,6 +201,7 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                 //var agrupaPorPelicula = false;//
 
 
+
                 docsSAP = lstDocsAux.Select(g =>
                     new DocumentoSBOVenta(SBOCompany, SAPbobsCOM.BoObjectTypes.oInvoices)
                     {
@@ -209,17 +210,15 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                         TaxDate = g.Fecha,//DateTime.ParseExact(g.Fecha, "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture),
                         DocDate = g.Fecha,//DateTime.ParseExact(g.Fecha, "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture),
                         Comments = g.Comentarios,
-                        U_EXC_TVENTA=g.CodTVenta,
+                        U_EXC_TVENTA = g.CodTVenta,
                         //FolioPrefixString = g.NroFactura?.Split('-')[0] ?? "",
                         //FolioNumber = Convert.ToInt32(g.Key.NroFactura?.Split('-').Length > 1 ? g.Key.NroFactura?.Split('-')[1] : "0"),
 
-                        Lines = (IEnumerable<DocumentoSBOLineVentas>)ObtenerDetalle(g.KeyDoc,g.TipoDoc),
                         IDs = ObtenerDetalle(g.KeyDoc, g.TipoDoc).Select(s =>
                         {
                             return s.DocEntry + "-" + s.LineNum;
                         })
                     }
-               );
 
                 try
                 {

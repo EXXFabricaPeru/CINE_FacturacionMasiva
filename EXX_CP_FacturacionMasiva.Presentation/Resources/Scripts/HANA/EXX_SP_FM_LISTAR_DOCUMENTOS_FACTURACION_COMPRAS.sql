@@ -71,7 +71,7 @@ BEGIN
 			,T0."DocNum"		as "NroDoc"
 			,T1."WhsCode"		as "CodComplejo"
 			,T2."WhsName"		as "NomComplejo"
-			,T1."DocDate"		as "FechaDocumento"
+			,T0."DocDate"		as "FechaDocumento"
 			,T1."BaseEntry"		as "KeyOC"
 			,T0."NumAtCard"		as "ReferenciaEM"
 			,T0."Comments"		as "Comentarios"

@@ -14,6 +14,7 @@ namespace EXX_CP_FacturacionMasiva.Domain.Entities
         public int LineNum { get; set; }
         public string CardCode { get; set; }
         public string CardName { get; set; }
+        public string Moneda { get; set; }
         public string CodPelicula { get; set; }
         public string CodComplejo { get; set; }
         public string Sala { get; set; }
@@ -27,5 +28,6 @@ namespace EXX_CP_FacturacionMasiva.Domain.Entities
         public string TipoGasto { get; set; }
         public double UnitPrice { get; set; }
         public string ItemCode { get; set; }
+        public string GrupoDetraccion { get; set; }
     }
 }

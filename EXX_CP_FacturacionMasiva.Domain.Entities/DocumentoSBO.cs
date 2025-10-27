@@ -15,10 +15,15 @@ namespace EXX_CP_FacturacionMasiva.Domain.Entities
         {
             _company = company;
             _doc = (SAPbobsCOM.Documents)company.GetBusinessObject(objType);
-            _doc.UserFields.Fields.Item("U_EXC_COSTO").Value = "DO";
-            _doc.UserFields.Fields.Item("U_EXC_TIPCOM").Value = "E";
-            _doc.UserFields.Fields.Item("U_EXX_TIPOOPER").Value = "02";
-            _doc.SalesPersonCode = 21;
+            var companyService = company.GetCompanyService();
+            var adminInfo = (SAPbobsCOM.AdminInfo)companyService.GetAdminInfo();
+            if (adminInfo.Country == "PE")
+            {               
+                _doc.UserFields.Fields.Item("U_EXC_COSTO").Value = "DO";
+                _doc.UserFields.Fields.Item("U_EXC_TIPCOM").Value = "E";
+                _doc.UserFields.Fields.Item("U_EXX_TIPOOPER").Value = "02";
+                _doc.SalesPersonCode = 21;
+            }
         }
         public string CardCode { set => _doc.CardCode = value; }
         public string CardName { set => _doc.CardName = value; }
@@ -32,7 +37,7 @@ namespace EXX_CP_FacturacionMasiva.Domain.Entities
         public string JournalMemo { set => _doc.JournalMemo = value; }
         public string NumAtCard { set => _doc.NumAtCard = value; }
         public string Indicator { set => _doc.Indicator = value; }
-
+        public string CtaAsociada {  set => _doc.ControlAccount = value; }
         public IEnumerable<string> IDs { get; set; }
         public string CodDetraccion { get; set; }
         public double TotalDocumento { get; set; }
@@ -43,7 +48,6 @@ namespace EXX_CP_FacturacionMasiva.Domain.Entities
                 var currentLine = 0;
                 foreach (var item in value)
                 {
-                    _doc.Lines.Add();
                     _doc.Lines.SetCurrentLine(currentLine);
                     _doc.Lines.BaseType = item.BaseType;
                     _doc.Lines.BaseEntry = item.BaseEntry;
@@ -52,7 +56,7 @@ namespace EXX_CP_FacturacionMasiva.Domain.Entities
                     _doc.Lines.WarehouseCode = item.WhsCode;
                     //_doc.Lines.UnitPrice = item.UnitPrice;
 
-                    if (currentLine == 0)
+                    if (currentLine == 0 && item.Ajuste > 0.00)
                     {
                         _doc.Lines.Expenses.SetCurrentLine(0);
                         _doc.Lines.Expenses.ExpenseCode = 3;
@@ -64,13 +68,13 @@ namespace EXX_CP_FacturacionMasiva.Domain.Entities
                     _doc.Lines.CostingCode2 = item.CodArea;
                     _doc.Lines.CostingCode3 = item.CodLineaProducto;
                     _doc.Lines.CostingCode4 = item.CodTipoGasto;
-                    //_doc.Lines.TaxLiable = SAPbobsCOM.BoYesNoEnum.tNO;
                     //_doc.Lines.TaxCode = "IGV";
                     if (!string.IsNullOrWhiteSpace(item.U_EXX_GRUPODET))
                     {
                         CodDetraccion = item.U_EXX_GRUPODET;
                         _doc.Lines.UserFields.Fields.Item("U_EXX_GRUPODET").Value = item.U_EXX_GRUPODET;
                     }
+                    _doc.Lines.Add();
                     currentLine++;
                 }
             }
@@ -81,7 +85,7 @@ namespace EXX_CP_FacturacionMasiva.Domain.Entities
             for (int i = 0; i < _doc.Lines.Count - 1; i++)
             {
                 _doc.Lines.SetCurrentLine(i);
-                _doc.Lines.TaxLiable = SAPbobsCOM.BoYesNoEnum.tNO;
+                _doc.Lines.WTLiable = SAPbobsCOM.BoYesNoEnum.tNO;
             }
         }
 
@@ -93,28 +97,35 @@ namespace EXX_CP_FacturacionMasiva.Domain.Entities
             recSet.DoQuery(sqlQry);
             var porDet = Convert.ToDouble(recSet.Fields.Item(0).Value) / 100;
 
-            _doc.Installments.SetCurrentLine(0);
-            _doc.Installments.DueDate = DateTime.Today;
 
             //si es M.E.
             if (_doc.DocCurrency != "SOL")
             {
-                _doc.Installments.Percentage = porDet;
+                _doc.Installments.SetCurrentLine(0);
+                _doc.Installments.DueDate = DateTime.Today;
+                _doc.Installments.Percentage = porDet * 100;
+                _doc.Installments.UserFields.Fields.Item("U_EXX_CONFTIPODET").Value = "Si";
+                _doc.Installments.Add();
+                _doc.Installments.SetCurrentLine(1);
+                _doc.Installments.DueDate = _doc.DocDueDate;
+                _doc.Installments.Percentage = 100 - (porDet * 100);
+                //_doc.Installments.Total = TotalDocumento - Math.Round(TotalDocumento * (porDet / 100));
+                _doc.Installments.UserFields.Fields.Item("U_EXX_CONFTIPODET").Value = "No";
             }
             else
             {
-                _doc.Installments.Percentage = (Math.Round(TotalDocumento * 1.18 * porDet) * 100) / (TotalDocumento * 1.18);
+                _doc.Installments.SetCurrentLine(0);
+                _doc.Installments.DueDate = DateTime.Today;
+                _doc.Installments.Percentage = (Math.Round(TotalDocumento * 1.18 * porDet) / (TotalDocumento * 1.18)) * 100;
+                _doc.Installments.UserFields.Fields.Item("U_EXX_CONFTIPODET").Value = "Si";
+
+                _doc.Installments.Add();
+                _doc.Installments.SetCurrentLine(1);
+                _doc.Installments.DueDate = _doc.DocDueDate;
+                _doc.Installments.Percentage = 100 - (Math.Round(TotalDocumento * 1.18 * porDet) / (TotalDocumento * 1.18)) * 100;
+                _doc.Installments.UserFields.Fields.Item("U_EXX_CONFTIPODET").Value = "No";
             }
-            _doc.Installments.UserFields.Fields.Item("U_EXX_CONFTIPODET").Value = "Si";
-
-            _doc.Installments.Add();
-            _doc.Installments.SetCurrentLine(1);
-            _doc.Installments.DueDate = _doc.DocDueDate;
-            _doc.Installments.Percentage = 100 - (Math.Round(TotalDocumento * 1.18 * porDet) * 100) / (TotalDocumento * 1.18);
-            //_doc.Installments.Total = TotalDocumento - Math.Round(TotalDocumento * (porDet / 100));
-            _doc.Installments.UserFields.Fields.Item("U_EXX_CONFTIPODET").Value = "No";
         }
-
 
         public int Add() { return _doc.Add(); }
     }

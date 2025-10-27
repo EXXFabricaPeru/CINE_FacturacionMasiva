@@ -14,6 +14,7 @@ namespace EXX_CP_FacturacionMasiva.Domain.Entities
         public int LineNum { get; set; }
         public string CardCode { get; set; }
         public string CardName { get; set; }
+        public string Moneda { get; set; }
         public string CodComplejo { get; set; }
         public string NroFactura { get; set; }
         public string TipoDocumento { get; set; }

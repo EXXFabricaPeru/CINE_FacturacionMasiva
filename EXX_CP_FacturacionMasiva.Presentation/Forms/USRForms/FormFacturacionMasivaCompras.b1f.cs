@@ -160,6 +160,7 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
             mtxDocs.Columns.Item("Col_17").Visible = false;
             mtxDocs.Columns.Item("Col_19").Visible = false;
             mtxDocs.Columns.Item("Col_20").Visible = false;
+            mtxDocs.Columns.Item("Col_25").Visible = false;
 
             udsFechaFacturacion.ValueEx = DateTime.Today.ToString("yyyyMMdd");
 
@@ -221,7 +222,7 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
             var codProv = string.IsNullOrWhiteSpace(this.udsCodProveedor.Value) ? "null" : $"'{this.udsCodProveedor.Value}'";
             var fchIniFunc = (DateTime.TryParse(udsFechaIniFunc.Value, out var rslt1) ? rslt1 : DateTime.MinValue).ToString("yyyyMMdd");
             var fchFinFunc = (DateTime.TryParse(udsFechaFinFunc.Value, out var rslt2) ? rslt2 : DateTime.MaxValue).ToString("yyyyMMdd");
-            var fchIniCont = (DateTime.TryParse(udsFechaFinCont.Value, out var rslt3) ? rslt3 : DateTime.MinValue).ToString("yyyyMMdd");
+            var fchIniCont = (DateTime.TryParse(udsFechaIniCont.Value, out var rslt3) ? rslt3 : DateTime.MinValue).ToString("yyyyMMdd");
             var fchFinCont = (DateTime.TryParse(udsFechaFinCont.Value, out var rslt4) ? rslt4 : DateTime.MaxValue).ToString("yyyyMMdd");
             var codComplejo = string.IsNullOrWhiteSpace(this.udsCodComplejo.Value) ? "null" : $"'{this.udsCodComplejo.Value}'";
             var codSala = string.IsNullOrWhiteSpace(this.udsCodSala.Value) ? "-1" : $"{this.udsCodSala.Value}";
@@ -333,6 +334,7 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                     LineNum = Convert.ToInt32(s.Cells.FirstOrDefault(c => c.ColumnUid == "LineaDoc").Value),
                     CardCode = s.Cells.FirstOrDefault(c => c.ColumnUid == "CardCode").Value,
                     CardName = s.Cells.FirstOrDefault(c => c.ColumnUid == "CardName").Value,
+                    Moneda = s.Cells.FirstOrDefault(c => c.ColumnUid == "MonedaDoc").Value,
                     CodPelicula = s.Cells.FirstOrDefault(c => c.ColumnUid == "CodPelicula").Value,
                     CodComplejo = s.Cells.FirstOrDefault(c => c.ColumnUid == "CodComplejo").Value,
                     FechaFuncion = DateTime.ParseExact(s.Cells.FirstOrDefault(c => c.ColumnUid == "FechaFuncion").Value, "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture),
@@ -343,7 +345,8 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                     Area = s.Cells.FirstOrDefault(c => c.ColumnUid == "Area").Value,
                     Glosa = s.Cells.FirstOrDefault(c => c.ColumnUid == "Glosa").Value,
                     UnitPrice = Convert.ToDouble(s.Cells.FirstOrDefault(c => c.ColumnUid == "PrecioUnitario").Value),
-                    ItemCode = s.Cells.FirstOrDefault(c => c.ColumnUid == "CodArticulo").Value
+                    ItemCode = s.Cells.FirstOrDefault(c => c.ColumnUid == "CodArticulo").Value,
+                    GrupoDetraccion = s.Cells.FirstOrDefault(c => c.ColumnUid == "GrupoDETFactura").Value
                 });
 
                 if (lstDocs.Count() == 0)
@@ -391,6 +394,7 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                     {
                         d.CardCode,
                         d.CardName,
+                        d.Moneda,
                         d.CodPelicula,
                         d.CodComplejo,
                     }).Select(g => new LineaDocumentoCompras
@@ -437,6 +441,7 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                 {
                     CardCode = d.CardCode,
                     CardName = d.CardName,
+                    Moneda = d.Moneda
                     //NroFactura = d.NroFactura,
                     //Glosa = d.Glosa
                 }).Select(g =>
@@ -444,8 +449,10 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                     {
                         CardCode = g.Key.CardCode,
                         CardName = g.Key.CardName,
+                        DocCurrency = g.Key.Moneda,
                         TaxDate = DateTime.ParseExact(udsFechaFacturacion.ValueEx, "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture),
                         DocDate = DateTime.ParseExact(udsFechaFacturacion.ValueEx, "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture),
+                        DocDueDate = DateTime.ParseExact(udsFechaFacturacion.ValueEx, "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture),
                         Comments = g.FirstOrDefault().Glosa,
                         JournalMemo = g.FirstOrDefault().Glosa,
                         FolioPrefixString = g.FirstOrDefault().NroFactura?.Split('-')[0] ?? "",
@@ -461,8 +468,10 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                             UnitPrice = s.UnitPrice,
                             CodComplejo = string.IsNullOrWhiteSpace(s.Complejo) ? g.FirstOrDefault(f => !string.IsNullOrWhiteSpace(f.Complejo)).Complejo : s.Complejo,
                             CodArea = string.IsNullOrWhiteSpace(s.Area) ? g.FirstOrDefault(f => !string.IsNullOrWhiteSpace(f.Area)).Area : s.Area,
+                            U_EXX_GRUPODET = s.GrupoDetraccion,
                             Ajuste = g.Sum(s2 => s2.Ajuste)
                         }),
+                        TotalDocumento = g.Sum(s => s.UnitPrice),
                         IDs = g.Select(s =>
                         {
                             return s.DocEntry + "-" + s.LineNum;
@@ -484,6 +493,7 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                     LineNum = Convert.ToInt32(s.Cells.FirstOrDefault(c => c.ColumnUid == "LineaDoc").Value),
                     CardCode = s.Cells.FirstOrDefault(c => c.ColumnUid == "CardCode").Value,
                     CardName = s.Cells.FirstOrDefault(c => c.ColumnUid == "CardName").Value,
+                    Moneda = s.Cells.FirstOrDefault(c => c.ColumnUid == "MonedaDoc").Value,
                     NroFactura = s.Cells.FirstOrDefault(c => c.ColumnUid == "NroFactura").Value,
                     TipoDocumento = s.Cells.FirstOrDefault(c => c.ColumnUid == "TipoDocFactura").Value,
                     FechaContable = DateTime.ParseExact(s.Cells.FirstOrDefault(c => c.ColumnUid == "FechaDocFactura").Value, "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture),
@@ -509,6 +519,7 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                     CardCode = d.CardCode,
                     CardName = d.CardName,
                     NroFactura = d.NroFactura,
+                    Moneda = d.Moneda,
                     Glosa = d.Glosa,
                     Indicator = d.Indicator
                 }).Select(g =>
@@ -516,7 +527,7 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                     {
                         CardCode = g.Key.CardCode,
                         CardName = g.Key.CardName,
-                        DocCurrency = "SOL",
+                        DocCurrency = g.Key.Moneda,
                         TaxDate = DateTime.ParseExact(udsFechaFacturacion.ValueEx, "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture),
                         DocDate = DateTime.ParseExact(udsFechaFacturacion.ValueEx, "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture),
                         DocDueDate = DateTime.ParseExact(udsFechaFacturacion.ValueEx, "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture),
@@ -526,6 +537,7 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                         FolioNumber = Convert.ToInt32(g.Key.NroFactura?.Split('-').Length > 1 ? g.Key.NroFactura?.Split('-')[1] : "0"),
                         NumAtCard = g.Key.NroFactura,
                         Indicator = g.Key.Indicator,
+                        CtaAsociada = string.IsNullOrWhiteSpace(g.FirstOrDefault().CuentaAsociada) ? null : ObtenerCodigoSYS(g.FirstOrDefault().CuentaAsociada),
                         Lines = g.Select(s => new DocumentoSBOLine
                         {
                             BaseType = s.ObjType,
@@ -551,8 +563,12 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                 var cntErr = 0;
                 foreach (var doc in docsSAP)
                 {
-                    //doc.QuitarRetencion();
-                    if (!string.IsNullOrWhiteSpace(doc.CodDetraccion)) doc.AplicarDetraccion(doc.CodDetraccion);
+
+                    if (!string.IsNullOrWhiteSpace(doc.CodDetraccion))
+                    {
+                        doc.AplicarDetraccion(doc.CodDetraccion);
+                        doc.QuitarRetencion();
+                    }
                     var rslt = doc.Add();
                     if (rslt != 0)
                     {
@@ -614,6 +630,17 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                 dttDocumentosSrv.SetValue("CtaAsocFactura", pVal.Row - 1, dtbl.GetValue("FormatCode", 0).ToString());
                 mtxDocsServ.LoadFromDataSourceEx();
             }
+        }
+
+        private string ObtenerCodigoSYS(string nroCuenta)
+        {
+            var sqlQry = $"select \"AcctCode\" from OACT where \"FormatCode\" = '{nroCuenta}'";
+            var recSet = (SAPbobsCOM.Recordset)SBOCompany.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
+
+            recSet.DoQuery(sqlQry);
+
+            if (!recSet.EoF) return recSet.Fields.Item(0).Value.ToString();
+            return null;
         }
     }
 }

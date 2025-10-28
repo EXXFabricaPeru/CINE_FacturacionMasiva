@@ -341,8 +341,8 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                     Sala = s.Cells.FirstOrDefault(c => c.ColumnUid == "Sala").Value,
                     NroFactura = s.Cells.FirstOrDefault(c => c.ColumnUid == "NroFactura").Value,
                     Ajuste = Convert.ToDouble(s.Cells.FirstOrDefault(c => c.ColumnUid == "Ajuste").Value),
-                    Complejo = s.Cells.FirstOrDefault(c => c.ColumnUid == "Complejo").Value,
-                    Area = s.Cells.FirstOrDefault(c => c.ColumnUid == "Area").Value,
+                    Complejo = s.Cells.FirstOrDefault(c => c.ColumnUid == "Complejo")?.Value ?? string.Empty,
+                    Area = s.Cells.FirstOrDefault(c => c.ColumnUid == "Area")?.Value ?? string.Empty,
                     Glosa = s.Cells.FirstOrDefault(c => c.ColumnUid == "Glosa").Value,
                     UnitPrice = Convert.ToDouble(s.Cells.FirstOrDefault(c => c.ColumnUid == "PrecioUnitario").Value),
                     ItemCode = s.Cells.FirstOrDefault(c => c.ColumnUid == "CodArticulo").Value,
@@ -352,6 +352,12 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                 if (lstDocs.Count() == 0)
                 {
                     Application.SBO_Application.StatusBar.SetText("Debe seleccionar al menos una linea", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
+                    return;
+                }
+
+                if (lstDocs.Any(d => string.IsNullOrWhiteSpace(d.NroFactura)))
+                {
+                    Application.SBO_Application.StatusBar.SetText("No se ha registrado el número de factura en una de las lineas", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
                     return;
                 }
 
@@ -466,8 +472,8 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                             ItemCode = s.ItemCode,
                             WhsCode = s.CodComplejo,
                             UnitPrice = s.UnitPrice,
-                            CodComplejo = string.IsNullOrWhiteSpace(s.Complejo) ? g.FirstOrDefault(f => !string.IsNullOrWhiteSpace(f.Complejo)).Complejo : s.Complejo,
-                            CodArea = string.IsNullOrWhiteSpace(s.Area) ? g.FirstOrDefault(f => !string.IsNullOrWhiteSpace(f.Area)).Area : s.Area,
+                            CodComplejo = string.IsNullOrWhiteSpace(s.Complejo) ? g.FirstOrDefault(f => !string.IsNullOrWhiteSpace(f.Complejo))?.Complejo : s.Complejo,
+                            CodArea = string.IsNullOrWhiteSpace(s.Area) ? g.FirstOrDefault(f => !string.IsNullOrWhiteSpace(f.Area))?.Area : s.Area,
                             U_EXX_GRUPODET = s.GrupoDetraccion,
                             Ajuste = g.Sum(s2 => s2.Ajuste)
                         }),
@@ -511,6 +517,12 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                 if (lstDocs.Count() == 0)
                 {
                     Application.SBO_Application.StatusBar.SetText("Debe seleccionar al menos una linea", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
+                    return;
+                }
+
+                if (lstDocs.Any(d => string.IsNullOrWhiteSpace(d.NroFactura)))
+                {
+                    Application.SBO_Application.StatusBar.SetText("No se ha registrado el número de factura en una de las lineas", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
                     return;
                 }
 

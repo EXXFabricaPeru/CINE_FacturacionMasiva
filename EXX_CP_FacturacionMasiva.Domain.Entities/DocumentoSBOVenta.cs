@@ -43,6 +43,9 @@ namespace EXX_CP_FacturacionMasiva.Domain.Entities
                     _doc.Lines.CostingCode = "40";// item.Complejo;
                     _doc.Lines.CostingCode2 = item.CodArea;
                     _doc.Lines.CostingCode3 = item.LineaProducto;
+                    _doc.Lines.BaseEntry = item.BaseEntry;
+                    _doc.Lines.BaseLine = item.BaseLine;
+                    _doc.Lines.BaseType = item.BaseType;
                     _doc.Lines.UserFields.Fields.Item("U_EXX_FFNC").Value = item.FechaFinContrato;
                     _doc.Lines.UserFields.Fields.Item("U_EXX_FINC").Value = item.FechaInicioContrato;
 
@@ -51,9 +54,35 @@ namespace EXX_CP_FacturacionMasiva.Domain.Entities
             }
         }
 
+
+        public DetraccioneLines Detraccion
+        {
+            set
+            {
+                var det = 0;
+                if (value.esDetraccion)
+                {
+                    _doc.Installments.DueDate = value.Fecha;
+                    _doc.Installments.Percentage = value.Porcentaje;
+                    _doc.Installments.UserFields.Fields.Item("U_EXX_CONFTIPODET").Value = "Si";
+                    _doc.Installments.Add();
+
+                    _doc.Installments.DueDate = value.Fecha;
+                    _doc.Installments.Percentage = 100 - value.Porcentaje;
+                    _doc.Installments.UserFields.Fields.Item("U_EXX_CONFTIPODET").Value = "No";
+                }
+
+            }
+        }
         public int Add() { return _doc.Add(); }
     }
 
+    public class DetraccioneLines
+    {
+        public DateTime Fecha { get; set; }
+        public double Porcentaje { get; set; }
+        public bool esDetraccion { get; set; }
+    }
     public class DocumentoSBOLineVentas
     {
         public string ItemCode { get; set; }
@@ -63,6 +92,9 @@ namespace EXX_CP_FacturacionMasiva.Domain.Entities
         public double Quantity { get; set; }
         public double LineNum { get; set; }
         public double DocEntry { get; set; }
+        public int BaseEntry { get; set; }
+        public int BaseLine { get; set; }
+        public int BaseType { get; set; }
         public string Complejo { get; set; }
         public string LineaProducto { get; set; }
         public DateTime FechaInicioContrato { get; set; }

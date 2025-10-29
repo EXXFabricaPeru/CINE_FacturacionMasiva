@@ -3,6 +3,7 @@ using EXX_CP_FacturacionMasiva.Domain.Entities;
 using SAPbouiCOM.Framework;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -115,8 +116,10 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
         {
             try
             {
-                var fchIni = (DateTime.TryParse(edtFechaIni.Value, out var rslt1) ? rslt1 : DateTime.MinValue).ToString("yyyyMMdd");
-                var fchFin = (DateTime.TryParse(edtFechaFin.Value, out var rslt2) ? rslt2 : DateTime.MaxValue).ToString("yyyyMMdd");
+                //var fchIni = (DateTime.TryParse(edtFechaIni.Value, out var rslt1) ? rslt1 : DateTime.MinValue).ToString("yyyyMMdd");
+                var fchIni = (DateTime.TryParseExact(edtFechaIni.Value, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var rslt1) ? rslt1 : DateTime.MinValue).ToString("yyyyMMdd");
+                //var fchFin = (DateTime.TryParse(edtFechaFin.Value, out var rslt2) ? rslt2 : DateTime.MaxValue).ToString("yyyyMMdd");
+                var fchFin = (DateTime.TryParseExact(edtFechaFin.Value, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var rslt2) ? rslt2 : DateTime.MaxValue).ToString("yyyyMMdd");
                 var cliente = string.IsNullOrEmpty(edtCliente.Value) ? "" : edtCliente.Value;
                 var vendedor = string.IsNullOrEmpty(edtVendedor.Value) ? "" : edtVendedor.Value;
                 var docBase = cboDocBase.Selected == null ? "" : cboDocBase.Selected?.Value;
@@ -143,6 +146,9 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
         private void Form_ResizeAfter(SAPbouiCOM.SBOItemEventArg pVal)
         {
             mtxDocumentos.AutoResizeColumns();
+            var topMatrix = mtxDocumentos.Item.Top + mtxDocumentos.Item.Height;
+            var topForm = UIAPIRawForm.Height;
+            btnGenerarDoc.Item.Top = topMatrix + 20;
 
         }
 
@@ -213,7 +219,8 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                         U_EXC_TVENTA = g.CodTVenta,
                         //FolioPrefixString = g.NroFactura?.Split('-')[0] ?? "",
                         //FolioNumber = Convert.ToInt32(g.Key.NroFactura?.Split('-').Length > 1 ? g.Key.NroFactura?.Split('-')[1] : "0"),
-
+                        Lines = ObtenerDetalle(g.KeyDoc, g.TipoDoc),
+                        Detraccion = ObtenerDetraccion(g.KeyDoc, g.TipoDoc, g.Fecha),
                         IDs = ObtenerDetalle(g.KeyDoc, g.TipoDoc).Select(s =>
                         {
                             return s.DocEntry + "-" + s.LineNum;
@@ -285,12 +292,56 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                 Quantity = Convert.ToDouble(s.Cells.FirstOrDefault(c => c.ColumnUid == "Quantity").Value),
                 LineNum = Convert.ToDouble(s.Cells.FirstOrDefault(c => c.ColumnUid == "LineaBase").Value),
                 DocEntry = Convert.ToDouble(s.Cells.FirstOrDefault(c => c.ColumnUid == "DocEntryBase").Value),
+                BaseLine = Convert.ToInt32(s.Cells.FirstOrDefault(c => c.ColumnUid == "LineaBase").Value),
+                BaseEntry = Convert.ToInt32(s.Cells.FirstOrDefault(c => c.ColumnUid == "DocEntryBase").Value),
+                BaseType = Convert.ToInt32(s.Cells.FirstOrDefault(c => c.ColumnUid == "ObjBase").Value),
                 FechaFinContrato = DateTime.ParseExact(s.Cells.FirstOrDefault(c => c.ColumnUid == "U_EXX_FFNC").Value, "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture),
                 FechaInicioContrato = DateTime.ParseExact(s.Cells.FirstOrDefault(c => c.ColumnUid == "U_EXX_FINC").Value, "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture)
             }); ;
 
 
             return lstDocs;
+        }
+
+        private DetraccioneLines ObtenerDetraccion(int keyDoc, string tipoDoc, DateTime fecha)
+        {
+            DetraccioneLines det = new DetraccioneLines();
+            det.esDetraccion = false;
+            if (tipoDoc == "01")
+            {
+
+                var sqlQry = $"select IFNULL(MAX(O1.\"U_EXX_GRUPODET\"),'') as \"GrupoDet\",IFNULL(MAX(GD.\"U_EXX_PORDET\"),0) as \"PorcDet\" " +
+                            $" from ORDR OV JOIN RDR1 O1 on O1.\"DocEntry\" = OV.\"DocEntry\" " +
+                        $" JOIN \"@EXX_GRUDET\" GD on GD.\"Code\" = O1.\"U_EXX_GRUPODET\" " +
+                        $" where O1.\"U_EXX_GRUPODET\" <> '999' " +
+                        $" AND OV.\"DocTotal\" > 700 " +
+                        $" and OV.\"DocEntry\" = {keyDoc} ";
+
+                dttDocumentosDetalle.ExecuteQuery(sqlQry);
+
+                if (dttDocumentosDetalle.Rows.Count > 0)
+                {
+                    // Procesar los datos
+                    for (int i = 0; i < dttDocumentosDetalle.Rows.Count; i++)
+                    {
+
+                        string GrupoDet = dttDocumentosDetalle.GetValue("GrupoDet", i).ToString();
+                        string PorcDet = dttDocumentosDetalle.GetValue("PorcDet", i).ToString();
+
+
+                        if (PorcDet != "0")
+                        {
+                            det.esDetraccion = true;
+                            det.Porcentaje = Convert.ToDouble(PorcDet);
+                            det.Fecha = fecha.AddDays(30);
+
+                        }
+                    }
+                }
+            }
+
+
+            return det;
         }
 
         private void edtVendedor_ChooseFromListAfter(object sboObject, SAPbouiCOM.SBOItemEventArg pVal)
@@ -301,8 +352,12 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
             var cflEvent = (dynamic)pVal;
             if (cflEvent.SelectedObjects is SAPbouiCOM.DataTable dtbl)
             {
-                this.edtVendedor.Value = dtbl.GetValue("SlpCode", 0).ToString();
-                //this.lblVendedor.Caption =  
+                var SlpCode = dtbl.GetValue("SlpCode", 0).ToString();
+                var SlpName = dtbl.GetValue("SlpName", 0).ToString();
+
+                SAPbouiCOM.UserDataSource oUDS = UIAPIRawForm.DataSources.UserDataSources.Item("UD_VEN");
+                oUDS.ValueEx = SlpCode;
+                this.lblVendedor.Caption = SlpName;
             }
 
         }
@@ -312,8 +367,12 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
             var cflEvent = (dynamic)pVal;
             if (cflEvent.SelectedObjects is SAPbouiCOM.DataTable dtbl)
             {
-                this.edtCliente.Value = dtbl.GetValue("CardCode", 0).ToString();
-                //this.lblCliente.Caption = dtbl.GetValue("CardName", 0).ToString();
+                var cardCode = dtbl.GetValue("CardCode", 0).ToString();
+                var cardname = dtbl.GetValue("CardName", 0).ToString();
+
+                SAPbouiCOM.UserDataSource oUDS = UIAPIRawForm.DataSources.UserDataSources.Item("UD_CLI");
+                oUDS.ValueEx = cardCode;
+                this.lblCliente.Caption = cardname;
             }
 
         }

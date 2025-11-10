@@ -63,6 +63,8 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
         public FormFacturacionMasivaCompras(string tipoFacturacion)
         {
             _tipoFacturacion = tipoFacturacion;
+            this.UIAPIRawForm.EnableMenu("1281", false);
+            this.UIAPIRawForm.EnableMenu("1282", false);
             this.UIAPIRawForm.Title = $"Facturación Masiva - {(_tipoFacturacion == "S" ? "Dulcería y Servicios" : "Distribución")}";
             this.MostrarControlesPorTipo(tipoFacturacion);
 

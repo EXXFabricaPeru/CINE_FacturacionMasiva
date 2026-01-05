@@ -63,6 +63,8 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
         public FormFacturacionMasivaCompras(string tipoFacturacion)
         {
             _tipoFacturacion = tipoFacturacion;
+            this.UIAPIRawForm.EnableMenu("1281", false);
+            this.UIAPIRawForm.EnableMenu("1282", false);
             this.UIAPIRawForm.Title = $"Facturación Masiva - {(_tipoFacturacion == "S" ? "Dulcería y Servicios" : "Distribución")}";
             this.MostrarControlesPorTipo(tipoFacturacion);
 
@@ -161,6 +163,8 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
             mtxDocs.Columns.Item("Col_19").Visible = false;
             mtxDocs.Columns.Item("Col_20").Visible = false;
             mtxDocs.Columns.Item("Col_25").Visible = false;
+
+            mtxDocsServ.Columns.Item("Col_23").Visible = false;
 
             udsFechaFacturacion.ValueEx = DateTime.Today.ToString("yyyyMMdd");
 
@@ -319,6 +323,8 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
             if (rsltIniFact != 1) return;
 
             IEnumerable<DocumentoSBO> docsSAP = null;
+            var companyService = SBOCompany.GetCompanyService();
+            var adminInfo = (SAPbobsCOM.AdminInfo)companyService.GetAdminInfo();
 
             if (_tipoFacturacion == "D")
             {
@@ -368,81 +374,81 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                 var agrupaPorComplejo = false;//udsSlcComplejo.ValueEx.Equals("Y");
                                               //Agrupa por sala
                 var agrupaPorSala = false;//udsSlcSala.ValueEx.Equals("Y");
-
-                if (agrupaPorSala)
-                {
-                    lstDocsAux = lstDocs.GroupBy(d => new
-                    {
-                        d.CardCode,
-                        d.CardName,
-                        d.CodPelicula,
-                        d.CodComplejo,
-                        d.Sala
-                    }).Select(g => new LineaDocumentoCompras
-                    {
-                        CardCode = g.Key.CardCode,
-                        CardName = g.Key.CardName,
-                        CodComplejo = g.Key.CodComplejo,
-                        CodPelicula = g.Key.CodPelicula,
-                        Sala = g.Key.Sala,
-                        Ajuste = g.Sum(d => d.Ajuste),
-                        Area = g.FirstOrDefault().Area,
-                        FechaFuncion = g.FirstOrDefault().FechaFuncion,
-                        Glosa = g.FirstOrDefault().Glosa,
-                        NroFactura = g.FirstOrDefault().NroFactura,
-                        ItemCode = g.FirstOrDefault().ItemCode,
-                        UnitPrice = g.FirstOrDefault().UnitPrice
-                    });
-                }
-                if (agrupaPorComplejo)
-                {
-                    lstDocsAux = lstDocs.GroupBy(d => new
-                    {
-                        d.CardCode,
-                        d.CardName,
-                        d.Moneda,
-                        d.CodPelicula,
-                        d.CodComplejo,
-                    }).Select(g => new LineaDocumentoCompras
-                    {
-                        CardCode = g.Key.CardCode,
-                        CardName = g.Key.CardName,
-                        CodComplejo = g.Key.CodComplejo,
-                        CodPelicula = g.Key.CodPelicula,
-                        Sala = g.FirstOrDefault().Sala,
-                        Ajuste = g.Sum(d => d.Ajuste),
-                        Area = g.FirstOrDefault().Area,
-                        FechaFuncion = g.FirstOrDefault().FechaFuncion,
-                        Glosa = g.FirstOrDefault().Glosa,
-                        NroFactura = g.FirstOrDefault().NroFactura,
-                        ItemCode = g.FirstOrDefault().ItemCode,
-                        UnitPrice = g.FirstOrDefault().UnitPrice
-                    });
-                }
-                if (agrupaPorPelicula)
-                {
-                    lstDocsAux = lstDocs.GroupBy(d => new
-                    {
-                        d.CardCode,
-                        d.CardName,
-                        d.CodPelicula,
-                    }).Select(g => new LineaDocumentoCompras
-                    {
-                        CardCode = g.Key.CardCode,
-                        CardName = g.Key.CardName,
-                        CodComplejo = "100100",
-                        CodPelicula = g.Key.CodPelicula,
-                        Sala = g.FirstOrDefault().Sala,
-                        Ajuste = g.Sum(d => d.Ajuste),
-                        Area = g.FirstOrDefault().Area,
-                        FechaFuncion = g.FirstOrDefault().FechaFuncion,
-                        Glosa = g.FirstOrDefault().Glosa,
-                        NroFactura = g.FirstOrDefault().NroFactura,
-                        ItemCode = g.FirstOrDefault().ItemCode,
-                        UnitPrice = g.FirstOrDefault().UnitPrice
-                    });
-                }
-
+                /*
+                                if (agrupaPorSala)
+                                {
+                                    lstDocsAux = lstDocs.GroupBy(d => new
+                                    {
+                                        d.CardCode,
+                                        d.CardName,
+                                        d.CodPelicula,
+                                        d.CodComplejo,
+                                        d.Sala
+                                    }).Select(g => new LineaDocumentoCompras
+                                    {
+                                        CardCode = g.Key.CardCode,
+                                        CardName = g.Key.CardName,
+                                        CodComplejo = g.Key.CodComplejo,
+                                        CodPelicula = g.Key.CodPelicula,
+                                        Sala = g.Key.Sala,
+                                        Ajuste = g.Sum(d => d.Ajuste),
+                                        Area = g.FirstOrDefault().Area,
+                                        FechaFuncion = g.FirstOrDefault().FechaFuncion,
+                                        Glosa = g.FirstOrDefault().Glosa,
+                                        NroFactura = g.FirstOrDefault().NroFactura,
+                                        ItemCode = g.FirstOrDefault().ItemCode,
+                                        UnitPrice = g.FirstOrDefault().UnitPrice
+                                    });
+                                }
+                                if (agrupaPorComplejo)
+                                {
+                                    lstDocsAux = lstDocs.GroupBy(d => new
+                                    {
+                                        d.CardCode,
+                                        d.CardName,
+                                        d.Moneda,
+                                        d.CodPelicula,
+                                        d.CodComplejo,
+                                    }).Select(g => new LineaDocumentoCompras
+                                    {
+                                        CardCode = g.Key.CardCode,
+                                        CardName = g.Key.CardName,
+                                        CodComplejo = g.Key.CodComplejo,
+                                        CodPelicula = g.Key.CodPelicula,
+                                        Sala = g.FirstOrDefault().Sala,
+                                        Ajuste = g.Sum(d => d.Ajuste),
+                                        Area = g.FirstOrDefault().Area,
+                                        FechaFuncion = g.FirstOrDefault().FechaFuncion,
+                                        Glosa = g.FirstOrDefault().Glosa,
+                                        NroFactura = g.FirstOrDefault().NroFactura,
+                                        ItemCode = g.FirstOrDefault().ItemCode,
+                                        UnitPrice = g.FirstOrDefault().UnitPrice
+                                    });
+                                }
+                                if (agrupaPorPelicula)
+                                {
+                                    lstDocsAux = lstDocs.GroupBy(d => new
+                                    {
+                                        d.CardCode,
+                                        d.CardName,
+                                        d.CodPelicula,
+                                    }).Select(g => new LineaDocumentoCompras
+                                    {
+                                        CardCode = g.Key.CardCode,
+                                        CardName = g.Key.CardName,
+                                        CodComplejo = "100100",
+                                        CodPelicula = g.Key.CodPelicula,
+                                        Sala = g.FirstOrDefault().Sala,
+                                        Ajuste = g.Sum(d => d.Ajuste),
+                                        Area = g.FirstOrDefault().Area,
+                                        FechaFuncion = g.FirstOrDefault().FechaFuncion,
+                                        Glosa = g.FirstOrDefault().Glosa,
+                                        NroFactura = g.FirstOrDefault().NroFactura,
+                                        ItemCode = g.FirstOrDefault().ItemCode,
+                                        UnitPrice = g.FirstOrDefault().UnitPrice
+                                    });
+                                }
+                */
                 docsSAP = lstDocsAux.GroupBy(d => new
                 {
                     CardCode = d.CardCode,
@@ -474,7 +480,7 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                             UnitPrice = s.UnitPrice,
                             CodComplejo = string.IsNullOrWhiteSpace(s.Complejo) ? g.FirstOrDefault(f => !string.IsNullOrWhiteSpace(f.Complejo))?.Complejo : s.Complejo,
                             CodArea = string.IsNullOrWhiteSpace(s.Area) ? g.FirstOrDefault(f => !string.IsNullOrWhiteSpace(f.Area))?.Area : s.Area,
-                            U_EXX_GRUPODET = s.GrupoDetraccion,
+                            U_EXX_GRUPODET = adminInfo.Country == "PE" ? (g.Sum(s2 => s2.UnitPrice) > 700 ? "037" : "") : "",
                             Ajuste = g.Sum(s2 => s2.Ajuste)
                         }),
                         TotalDocumento = g.Sum(s => s.UnitPrice),
@@ -575,7 +581,6 @@ namespace EXX_CP_FacturacionMasiva.Presentation.Forms.USRForms
                 var cntErr = 0;
                 foreach (var doc in docsSAP)
                 {
-
                     if (!string.IsNullOrWhiteSpace(doc.CodDetraccion))
                     {
                         doc.AplicarDetraccion(doc.CodDetraccion);
